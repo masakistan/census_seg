@@ -17,6 +17,9 @@ PAD = 0
 EXPECTED_HEIGHT = 37
 MERGED_ROW_TOLERANCE = 10
 
+def collate(batch):
+    return batch[0]
+
 class FormsDataset(Dataset):
     def __init__(self, img_dir, out_dir):
         self.paths = []
@@ -34,8 +37,8 @@ class FormsDataset(Dataset):
 
     def __getitem__(self, idx):
         img_path = join(*self.paths[idx])
-        process(img_path, self.out_dir)
-        return img_path
+        count = process(img_path, self.out_dir)
+        return (img_path, count)
 
     
 img_dir = sys.argv[1]
@@ -47,11 +50,12 @@ img_dataloader = DataLoader(
     batch_size = 1,
     shuffle = False,
     num_workers = 60,
+    collate_fn = collate,
 )
 
 
 total = len(img_dataloader)
-for idx, path in enumerate(img_dataloader):
-    print(idx, '/', total, path)
+for idx, (path, count) in enumerate(img_dataloader):
+    print(idx, '/', total, path, count)
 
 #cv2.imwrite(out_path, name)

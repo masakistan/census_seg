@@ -61,7 +61,7 @@ def split_erroneously_merged_rows(z, p):
     return n_z, n_p
 
 
-def process(img_path, out_dir):
+def process(img_path, out_dir, save_thresh = None):
     img = cv2.imread(img_path)
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     #print(img_gray.shape)
@@ -109,12 +109,6 @@ def process(img_path, out_dir):
     prefix = img_path
     prefix = prefix[prefix.rfind('/') + 1:prefix.rfind('.')]
 
-    try:
-        makedirs(join(out_dir, prefix))
-    except:
-        #print('out dir already exists!')
-        pass
-
     boundaries = vdist > VTHRESH
     z, p, v = rle(boundaries)
     z, p = split_erroneously_merged_rows(z, p)
@@ -129,12 +123,36 @@ def process(img_path, out_dir):
             except:
                 end = len(name)
 
-            snippet = name[start:end, :]
-            out_path = join(out_dir, prefix, prefix + '_' + str(count) + '.jpg')
-            #print('out path', out_path)
-            if len(snippet) > 70:
-                print('WARNING: dims look weird', out_path, snippet.shape, start, end, _p, p[i - 1], p[i + 1], _z, z[i + 1])
-            #print('outputting to', out_path)
-            cv2.imwrite(out_path, snippet)
             count += 1
+            
+    if count == 50:
+        try:
+            makedirs(join(out_dir, prefix))
+        except:
+            #print('out dir already exists!')
+            pass
+
+        count = 0
+        for i, (_p, _z) in enumerate(zip(p, z)):
+            #print(_p, _z)
+            if _p > 200 and _z >= 25:
+                #print(i, _p, _z, p[i - 1], p[i + 1])
+                start = p[i - 1] - 2
+                try:
+                    end = p[i + 1] + z[i + 1] + 20
+                except:
+                    end = len(name)
+
+                snippet = name[start:end, :]
+                out_path = join(out_dir, prefix, prefix + '_' + str(count) + '.jpg')
+                #print('out path', out_path)
+                if len(snippet) > 70:
+                    print('WARNING: dims look weird', out_path, snippet.shape, start, end, _p, p[i - 1], p[i + 1], _z, z[i + 1])
+                #print('outputting to', out_path)
+                cv2.imwrite(out_path, snippet)
+                count += 1
+    else:
+        count = None
+
+    return count
     
