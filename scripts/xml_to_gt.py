@@ -15,7 +15,7 @@ with open(sys.argv[1], 'r') as fh:
         surn = None
         gn = None
 
-        psurn = None
+        phid = None
         #print('xml path:', xml_path)
         skipped = set()
         for type_tag in root.findall('headera/header-item'):
@@ -36,17 +36,19 @@ with open(sys.argv[1], 'r') as fh:
                 surn = type_tag.text.strip()
             elif type_tag.get('name') == 'PR_NAME_GN' and type_tag.text is not None:
                 gn = type_tag.text.strip()
+            elif type_tag.get('name') == 'HOUSEHOLD_ID' and type_tag.text is not None:
+                hid = type_tag.text.strip()
 
             if surn is not None and gn is not None and (len(surn) > 0 and len(gn) > 0):
                 info = join('name_snippets', line.strip(), line.strip() + '_' + str(i) + '.jpg')
                 assert i < 60, info
                 
-                if psurn != surn:
+                if phid != hid:
                     print('\t'.join(map(str, [idx, info, surn + ', ' + gn])))
                 else:
                     print('\t'.join(map(str, [idx, info, gn])))
 
-                psurn = surn
+                phid = hid
                 surn = None
                 gn = None
                 i += 1
